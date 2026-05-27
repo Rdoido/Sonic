@@ -3,46 +3,138 @@
   background-color: #050505;
 }
 
-.App-header {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
 .App-link {
   color: #D4AF37;
 }
 
-/* Game card hover effect */
-.game-card {
+/* ============= MODERN BACKGROUND ============= */
+.sonic-bg-modern {
+  background:
+    radial-gradient(ellipse at top, #16284a 0%, #0a1628 50%, #060e1c 100%);
+  position: relative;
+}
+
+.sonic-bg-modern::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 25% 30%, rgba(255, 215, 0, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 75% 80%, rgba(217, 70, 239, 0.05) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============= GLASS CARDS ============= */
+.glass-card-modern {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.4), transparent);
+}
+
+.glass-card-modern:hover {
+  border-color: rgba(255, 215, 0, 0.2);
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 215, 0, 0.1);
+}
+
+.announcement-bar-modern {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.06) 0%, rgba(59, 130, 246, 0.06) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  backdrop-filter: blur(20px);
+}
+
+/* ============= GAME CARD MODERN ============= */
+.game-card-modern {
   position: relative;
   overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 14px;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  isolation: isolate;
 }
 
-.game-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
-}
-
-.game-card::before {
+.game-card-modern::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, transparent 50%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), transparent 40%, transparent 60%, rgba(255, 215, 0, 0.15));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 30;
 }
 
-.game-card:hover::before {
-  opacity: 1;
+.game-card-modern:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(255, 215, 0, 0.25);
 }
 
-/* Glass panel */
+/* Shine sweep animation on hover */
+.game-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.7s ease;
+  z-index: 25;
+  border-radius: inherit;
+}
+
+.game-card-modern:hover .game-shine {
+  transform: translateX(100%);
+}
+
+/* ============= LEGACY (kept for other pages) ============= */
+.game-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.game-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.7) 100%);
+  pointer-events: none;
+}
+
+.game-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 32px rgba(255, 215, 0, 0.4);
+}
+
 .glass-panel {
   backdrop-filter: blur(24px);
   background: rgba(0, 0, 0, 0.6);
@@ -50,7 +142,6 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-/* Button glow */
 .btn-gold {
   background: #D4AF37;
   color: #000;
@@ -65,7 +156,6 @@
   transform: scale(1.05);
 }
 
-/* PIX button */
 .btn-pix {
   background: #32BCAD;
   transition: all 0.3s ease;
@@ -76,32 +166,19 @@
   transform: scale(1.02);
 }
 
-/* Marquee animation */
 @keyframes marquee {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 .animate-marquee {
   animation: marquee 30s linear infinite;
 }
 
-/* Spin animation for game symbols */
 @keyframes spin-slot {
-  0% {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(0);
-  }
+  0% { transform: translateY(-100%); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(0); }
 }
 
 .slot-symbol {

@@ -443,6 +443,72 @@ GAMES = {
         "rtp": 97.00,
         "symbols": ["💎", "⛏️", "💰", "🪙", "🟡", "🔥", "👑", "✨"],
     },
+    "dragon-hatch": {
+        "name": "Dragon Hatch",
+        "provider": "PG Soft",
+        "rtp": 96.71,
+        "symbols": ["🐉", "🥚", "🔥", "💎", "👑", "⚡", "🌟", "💰"],
+    },
+    "wild-bandito": {
+        "name": "Wild Bandito",
+        "provider": "PG Soft",
+        "rtp": 96.71,
+        "symbols": ["🤠", "🌵", "💰", "🔫", "🎰", "🥇", "⭐", "🌶️"],
+    },
+    "mahjong-ways": {
+        "name": "Mahjong Ways",
+        "provider": "PG Soft",
+        "rtp": 96.95,
+        "symbols": ["🀄", "🐉", "💰", "🎴", "🥇", "🌟", "🏮", "👑"],
+    },
+    "gates-olympus": {
+        "name": "Gates of Olympus",
+        "provider": "Pragmatic Play",
+        "rtp": 96.50,
+        "symbols": ["⚡", "👑", "💎", "🏛️", "🌟", "💰", "🔱", "🥇"],
+    },
+    "sweet-bonanza": {
+        "name": "Sweet Bonanza",
+        "provider": "Pragmatic Play",
+        "rtp": 96.51,
+        "symbols": ["🍬", "🍭", "🍓", "🍩", "🧁", "🍇", "🍉", "💎"],
+    },
+    "sugar-rush": {
+        "name": "Sugar Rush",
+        "provider": "Pragmatic Play",
+        "rtp": 96.50,
+        "symbols": ["🍰", "🍬", "🧁", "🍭", "🍪", "🍦", "💗", "💜"],
+    },
+    "lucky-neko": {
+        "name": "Lucky Neko",
+        "provider": "JILI",
+        "rtp": 96.50,
+        "symbols": ["🐱", "🪙", "🏮", "💰", "🎰", "🥇", "🌟", "🎴"],
+    },
+    "aztec-gold": {
+        "name": "Aztec Gold",
+        "provider": "JILI",
+        "rtp": 96.40,
+        "symbols": ["👑", "🏛️", "💰", "🥇", "🌞", "🐍", "💎", "🗿"],
+    },
+    "aviator": {
+        "name": "Aviator",
+        "provider": "Spribe",
+        "rtp": 97.00,
+        "symbols": ["✈️", "🚀", "💰", "📈", "🔥", "⭐", "💎", "🥇"],
+    },
+    "crazy-time": {
+        "name": "Crazy Time",
+        "provider": "Evolution",
+        "rtp": 96.08,
+        "symbols": ["🎡", "⭐", "💰", "🎰", "🎲", "👑", "🎁", "💎"],
+    },
+    "plinko": {
+        "name": "Plinko",
+        "provider": "Spribe",
+        "rtp": 97.00,
+        "symbols": ["🟡", "🔴", "🟢", "🔵", "🟣", "🟠", "💰", "⭐"],
+    },
 }
 
 

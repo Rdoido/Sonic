@@ -1,0 +1,41 @@
+{
+  "summary": "Backend-only testing for SonicBet after adding 11 new games (total 17). All 19 pytest cases passed against the public REACT_APP_BACKEND_URL. Validated /api/games returns all 17 ids (incl. dragon-hatch, wild-bandito, mahjong-ways, gates-olympus, sweet-bonanza, sugar-rush, lucky-neko, aztec-gold, aviator, crazy-time, plinko), register+login flow w/ welcome bonus R$10, cookie + Bearer token auth, wallet balance, deposit-pix (amount=20 increases balance), play_game for both old (fortune-tiger, mina-misteriosa) and new (aviator, gates-olympus, plinko, crazy-time) ids, 404 for unknown game, recent-winners list, 6 promotions.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/auth/register", "issue": "Sets cookies with secure=True + samesite='none' (correct for cross-site preview domain), but no rate limiting on register/login - susceptible to brute-force / spam account creation."},
+      {"endpoint": "/api/wallet/deposit-pix", "issue": "MOCKED by design - instantly credits balance without any gateway verification. Documented as intentional."},
+      {"endpoint": "/api/games/{game_id}/play", "issue": "RNG uses random.random() (not cryptographically secure). Acceptable for demo, but flag for production-readiness."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_sonicbet_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py is 857 lines - consider splitting into routers (auth.py, wallet.py, games.py, promotions.py) for maintainability (>700 line guideline).",
+    "JWT_SECRET is read at import time via os.environ['JWT_SECRET']; missing env var would crash the app fast (good), but no fallback / clearer error message.",
+    "withdraw endpoint requires total_bet >= 100 but error math `100 - user.get('total_bet', 0)` can show negative values if total_bet > 100 (currently guarded by the outer < 100 check, OK).",
+    "GAMES dict is in-memory; if server restarts mid-bet there's no transactional safety - bets and wallet updates aren't atomic (separate update_one calls on wallets + users + game_history). Consider Mongo transactions.",
+    "No input sanitization on phone field beyond digit stripping; relies on Pydantic str only.",
+    "recent_winners endpoint does N+1 user lookups inside the loop - replace with a single $lookup aggregate or $in query.",
+    "No data-testid attributes verified in frontend (frontend testing was out of scope this run)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/__init__.py (new)",
+    "/app/backend/tests/test_sonicbet_api.py (new)"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "n/a"},
+  "test_credentials": "Auto-generated random phone numbers in tests (e.g. 119XXXXXXXX, password Test1234). No pre-seeded admin/test users in repo; /app/memory/test_credentials.md not present.",
+  "seed_data_creation": "Each test run creates a new user with a random 11-digit BR mobile phone. Welcome bonus (R$10) + R$20 PIX deposit + several R$5 bets are written to MongoDB. No teardown - test data accumulates but is keyed by unique random phones so it does not collide.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend is fully green. Test file at /app/backend/tests/test_sonicbet_api.py uses pytest + REACT_APP_BACKEND_URL from frontend/.env. If new games are added, extend EXPECTED_GAME_IDS set and the parametrized test list. Frontend (HeroCarousel, GameThumbnail, Home.js) was NOT tested this iteration per request - if asked, validate carousel auto-rotation, all 17 game thumbnails render, modal flows (login/register/deposit) and play interaction.",
+  "rca of the issue": "N/A - no failures."
+}

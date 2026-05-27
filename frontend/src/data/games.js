@@ -1,67 +1,155 @@
-// Game catalog with original PG Soft style images
+// Game catalog with original-style designs
+// Each game has a unique visual rendered by GameThumbnail.js
 export const GAMES_CATALOG = [
+  // PG Soft
   {
     id: 'fortune-tiger',
     name: 'Fortune Tiger',
     provider: 'PG',
     rtp: 96.81,
-    image: 'https://static.prod-images.emergentagent.com/jobs/c342faa1-4c37-492e-9db2-9a223e114e93/images/fde31d192b686ae7d52dc9a3e35dc203f8372a05bbe38b07a2136de8faf95660.png',
-    bg: 'from-red-600 via-orange-500 to-yellow-500',
     hot: true,
-    popular: true
+    popular: true,
+    category: 'pg'
   },
   {
     id: 'fortune-rabbit',
     name: 'Fortune Rabbit',
     provider: 'PG',
     rtp: 96.75,
-    image: 'https://static.prod-images.emergentagent.com/jobs/c342faa1-4c37-492e-9db2-9a223e114e93/images/4b335a5d6ecfdeeef5de0049756bd4776081bb465e7c30a4faedff6c711fb87c.png',
-    bg: 'from-pink-500 via-purple-500 to-indigo-600',
     hot: true,
-    popular: true
+    popular: true,
+    category: 'pg'
   },
   {
     id: 'fortune-snake',
     name: 'Fortune Snake',
     provider: 'PG',
     rtp: 96.50,
-    image: null, // Will use CSS-generated icon
-    bg: 'from-purple-700 via-pink-600 to-pink-400',
     hot: true,
     popular: true,
-    emoji: '🐍'
+    category: 'pg'
   },
   {
     id: 'fortune-ox',
     name: 'Fortune Ox',
     provider: 'PG',
     rtp: 96.71,
-    image: null,
-    bg: 'from-yellow-500 via-red-500 to-red-700',
-    hot: false,
     popular: true,
-    emoji: '🐂'
+    category: 'pg'
   },
   {
     id: 'fortune-mouse',
     name: 'Fortune Mouse',
     provider: 'PG',
     rtp: 96.96,
-    image: null,
-    bg: 'from-orange-500 via-yellow-500 to-yellow-300',
     popular: true,
-    emoji: '🐭'
+    category: 'pg'
   },
   {
     id: 'mina-misteriosa',
     name: 'Mina Misteriosa',
     provider: 'PG',
     rtp: 97.00,
-    image: null,
-    bg: 'from-amber-600 via-amber-500 to-yellow-500',
     hot: true,
     popular: true,
-    emoji: '💎',
+    category: 'pg',
     countdown: true
+  },
+  {
+    id: 'dragon-hatch',
+    name: 'Dragon Hatch',
+    provider: 'PG',
+    rtp: 96.71,
+    hot: true,
+    popular: true,
+    category: 'pg'
+  },
+  {
+    id: 'wild-bandito',
+    name: 'Wild Bandito',
+    provider: 'PG',
+    rtp: 96.71,
+    popular: true,
+    category: 'pg'
+  },
+  {
+    id: 'mahjong-ways',
+    name: 'Mahjong Ways',
+    provider: 'PG',
+    rtp: 96.95,
+    popular: true,
+    category: 'pg'
+  },
+  // Pragmatic Play
+  {
+    id: 'gates-olympus',
+    name: 'Gates of Olympus',
+    provider: 'PP',
+    rtp: 96.50,
+    hot: true,
+    popular: true,
+    category: 'pp'
+  },
+  {
+    id: 'sweet-bonanza',
+    name: 'Sweet Bonanza',
+    provider: 'PP',
+    rtp: 96.51,
+    hot: true,
+    popular: true,
+    category: 'pp'
+  },
+  {
+    id: 'sugar-rush',
+    name: 'Sugar Rush',
+    provider: 'PP',
+    rtp: 96.50,
+    popular: true,
+    category: 'pp'
+  },
+  // JILI
+  {
+    id: 'lucky-neko',
+    name: 'Lucky Neko',
+    provider: 'JILI',
+    rtp: 96.50,
+    hot: true,
+    popular: true,
+    category: 'jili'
+  },
+  {
+    id: 'aztec-gold',
+    name: 'Aztec Gold',
+    provider: 'JILI',
+    rtp: 96.40,
+    popular: true,
+    category: 'jili'
+  },
+  // Spribe / Evolution
+  {
+    id: 'aviator',
+    name: 'Aviator',
+    provider: 'SPRIBE',
+    rtp: 97.00,
+    hot: true,
+    popular: true,
+    category: 'tada'
+  },
+  {
+    id: 'crazy-time',
+    name: 'Crazy Time',
+    provider: 'EVO',
+    rtp: 96.08,
+    hot: true,
+    popular: true,
+    category: 'tada'
+  },
+  {
+    id: 'plinko',
+    name: 'Plinko',
+    provider: 'SPRIBE',
+    rtp: 97.00,
+    popular: true,
+    category: 'pesca'
   }
 ];
