@@ -1,0 +1,73 @@
+{
+  "summary": "Completed full backend API testing for SonicBet platform. 45/45 tests passing after fixing 2 critical MongoDB ObjectId serialization bugs in /api/auth/register and /api/games/{game_id}/play. All authentication, wallet (PIX deposit/withdraw), 6 games, VIP/profile, redeem codes, referral, contact, and promotions endpoints validated end-to-end with persistence checks.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "/api/auth/register",
+        "issue": "FIXED. Returned HTTP 500 'ObjectId is not iterable' on every successful registration. Root cause: motor's insert_one() mutates user_doc by adding the inserted _id (ObjectId); the endpoint then returned that same dict via FastAPI's jsonable_encoder, which cannot serialize ObjectId. The user WAS being created in DB but no response/cookie reached the client, leaving accounts orphaned. Applied fix: user_doc.pop('_id', None) after insert_one.",
+        "priority": "CRITICAL"
+      },
+      {
+        "endpoint": "/api/games/{game_id}/play",
+        "issue": "FIXED. Same ObjectId leakage pattern: game_doc is mutated by insert_one and then spread back into the response (`{**game_doc, ...}`). Caused HTTP 500 on every single game play. Applied fix: game_doc.pop('_id', None) after insert_one.",
+        "priority": "CRITICAL"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "/api/auth/register",
+        "issue": "normalize_phone strips non-digits but does not strip the BR country code '55'. So entering '+55 11 99999-8888' (very natural from the UI prefix shown to users) yields 13 digits and is rejected as 'Telefone inválido'. Recommendation: strip leading '55' if length is 12-13, OR document strictly that UI must only pass 10-11 digit local number."
+      },
+      {
+        "endpoint": "/api/wallet/withdraw",
+        "issue": "Hardcoded gating: requires user['total_bet'] >= 100 (literal R$100). Works, but the threshold is not derived from deposit amount as PRD suggests ('apostar pelo menos o valor depositado'). Flag for product alignment."
+      },
+      {
+        "endpoint": "/api/wallet/deposit-pix",
+        "issue": "MOCKED gateway - simulated PIX (balance is credited instantly, no real gateway). Highlighted as expected per request."
+      },
+      {
+        "endpoint": "/api/wallet/withdraw",
+        "issue": "MOCKED gateway - withdrawal is recorded with status=pending but never processed; no admin/cron flow."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_sonicbet_backend.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Review and accept the two ObjectId fixes already applied in /app/backend/server.py (lines after insert_one for users and game_history). Consider applying the same defensive pop('_id', None) anywhere insert_one() is used if its dict is later returned.",
+    "Decide on phone normalization policy for the '+55' country code (currently rejected). Easiest fix: strip leading '55' when len(digits) in (12, 13).",
+    "Confirm the R$100 minimum total_bet for withdrawal is the intended business rule (PRD says 'aposte o valor depositado').",
+    "Optional: update /app/memory/test_credentials.md - it currently references the old Google Auth flow but the platform now uses phone+password auth."
+  ],
+  "critical_code_review_comments": [
+    "BUG (FIXED): insert_one() mutates the input dict to attach Mongo _id (ObjectId). Returning that same dict via FastAPI causes 500. Pattern repeated in 2 endpoints; audit all other insert_one usages for safety (deposit_pix, withdraw, redeem, contact, transactions, etc. - currently OK because they don't return the inserted dict).",
+    "Secure cookie attributes (samesite=none, secure=true) are correct for cross-site usage, but cookies will NOT work on http://localhost during local dev. Acceptable for preview.",
+    "JWT_SECRET is exposed in backend/.env - fine for preview, but rotate before production.",
+    "VIP level computation is only based on cumulative total_bet (never decreases) - good. But user's total_bet field is only incremented during play; it should also feed /profile/stats consistency (currently stats.total_bet is computed via aggregation over game_history independently - both numbers can diverge if game_history gets purged).",
+    "No rate limiting on auth/register or login - susceptible to brute force / spam account creation. Recommend simple throttling middleware.",
+    "Password hashing uses bcrypt with default 12 rounds - good.",
+    "/api/games/recent-winners exposes public_id and an anonymized phone tail (last 4 digits) - acceptable, but consider whether last 4 of phone is too identifiable.",
+    "No pagination on /wallet/transactions and /games/history beyond a limit query param - fine for MVP.",
+    "Welcome bonus is added to 'balance' (real money column) rather than 'bonus_balance'. This means a fresh user could in principle withdraw the bonus without ever depositing (currently blocked only by the R$100 total_bet rule). Consider crediting to bonus_balance instead.",
+    "PIX QR string is a stub (random UUID embedded). MOCKED as expected."
+  ],
+  "updated_files": [
+    "/app/backend/server.py (added _id pop after insert_one in /auth/register and /games/{id}/play)",
+    "/app/backend/tests/test_sonicbet_backend.py (new file)"
+  ],
+  "success_rate": {"backend": "100% (45/45)", "frontend": "not tested (backend-only request)"},
+  "test_credentials": "Generated dynamically per test (phone: '11' + 9 random digits, password: 'senha123'). Redeem codes used: BEMVINDO10, SONICBET50, BONUS20.",
+  "seed_data_creation": "Multiple ephemeral users created during tests (not cleaned up - acceptable for preview DB). Several deposits, plays, withdrawals, redeems, contact submissions inserted.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend is fully green after two ObjectId fixes. Frontend not yet tested. When testing frontend, note: cookies are httpOnly+secure+samesite=none so they ONLY survive over the public HTTPS preview URL (not http://localhost). Phone input must be 10-11 digits AFTER stripping non-digits; including country code 55 currently breaks registration. Test credentials must be generated fresh - file /app/memory/test_credentials.md is outdated (references Google Auth which no longer exists).",
+  "rca of the issue": "Two endpoints (auth/register, games/play) returned 500 because pymongo/motor's insert_one() mutates the inserted dict in-place to add a BSON ObjectId under the '_id' key. The endpoints then returned that same dict to FastAPI's jsonable_encoder, which cannot serialize ObjectId and raises TypeError -> 500. Reproduction: any POST /api/auth/register with valid payload before the fix would create the user in MongoDB but return 500 and set no cookie. Mitigation applied: pop('_id', None) on the dict immediately after insert_one() before it is returned/spread."
+}

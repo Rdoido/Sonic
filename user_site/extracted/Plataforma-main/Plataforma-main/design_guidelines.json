@@ -1,0 +1,101 @@
+{
+  "theme": "dark",
+  "archetype": "5 (Luxury) - Modified for High-End Casino Gaming",
+  "design_philosophy": "A legalized, trustworthy yet highly exhilarating casino platform. Employs Archetype 5 (Luxury) mixed with subtle Archetype 7 (Electric) accents. Deep midnight blacks for the background create a cinematic contrast against Vegas Gold and vibrant game thumbnails. Glassmorphism is used extensively for UI overlays (like the wallet and PIX modal) to maintain context without losing the immersive casino background. The design must feel secure (legalized) but fun.",
+  "colors": {
+    "background": {
+      "default": "#050505",
+      "surface": "#121212",
+      "surface_elevated": "#1A1A1A"
+    },
+    "primary": {
+      "default": "#D4AF37",
+      "hover": "#F3E5AB",
+      "glow": "rgba(212, 175, 55, 0.4)"
+    },
+    "secondary": {
+      "default": "#E60000",
+      "hover": "#FF3333"
+    },
+    "accent": {
+      "pix_green": "#32BCAD",
+      "neon_purple": "#9D4CDD"
+    },
+    "text": {
+      "primary": "#FFFFFF",
+      "secondary": "#A1A1AA",
+      "muted": "#71717A",
+      "inverse": "#000000"
+    },
+    "border": {
+      "default": "rgba(255, 255, 255, 0.1)",
+      "highlight": "rgba(212, 175, 55, 0.3)"
+    }
+  },
+  "typography": {
+    "font_family": {
+      "heading": "'Outfit', sans-serif",
+      "body": "'Manrope', sans-serif"
+    },
+    "scales": {
+      "h1": "text-5xl md:text-6xl font-black tracking-tighter",
+      "h2": "text-3xl md:text-4xl font-bold tracking-tight",
+      "h3": "text-xl md:text-2xl font-bold",
+      "body": "text-base font-medium leading-relaxed",
+      "label": "text-xs font-bold uppercase tracking-[0.2em]"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Generous spacing (p-6, p-8) within functional cards (wallet, history), but tight, visually heavy bento grids for the game lobby to simulate casino density.",
+    "grid_modes": {
+      "game_lobby": "grid-cols-2 md:grid-cols-4 gap-4 md:gap-6",
+      "promo_bento": "grid-cols-1 md:grid-cols-12 gap-6"
+    },
+    "surface_styles": {
+      "glass_panel": "backdrop-blur-xl bg-black/60 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
+      "game_card": "relative overflow-hidden rounded-2xl group border border-white/5 hover:border-primary/50 transition-colors bg-[#111]"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#D4AF37] text-black font-bold hover:bg-[#F3E5AB] shadow-[0_0_15px_rgba(212,175,55,0.3)] transition-all rounded-full px-8 py-3",
+      "pix_deposit": "bg-[#32BCAD] text-white font-bold hover:bg-[#2AA699] rounded-xl px-6 py-4 w-full flex justify-between items-center",
+      "ghost": "text-white hover:bg-white/10 rounded-full px-6 py-3"
+    },
+    "wallet_modal": "Use Shadcn Dialog. Must contain 2 steps: 1) Enter amount, 2) Show PIX QR Code + Copy/Paste string. UI must use glassmorphism.",
+    "navigation": "Sticky Header, z-50, backdrop-blur-xl bg-black/50 border-b border-white/10. Contains Logo, Promotions, User Balance (Wallet), and Profile/Auth."
+  },
+  "iconography_and_libraries": {
+    "icons": "lucide-react (General UI), react-icons (for Google FcGoogle, and generic PIX representational icons like MdPix or just SVG)",
+    "animations": "framer-motion (for game card hovers, modal entrances, and page transitions). Use react-fast-marquee for a live 'Recent Winners' ticker."
+  },
+  "image_urls": [
+    {
+      "category": "hero_banner",
+      "url": "https://static.prod-images.emergentagent.com/jobs/c342faa1-4c37-492e-9db2-9a223e114e93/images/b399460fd5af5cf5bee06582639e1b94bce8c2c88bee09cf0b87525734cf6718.png",
+      "description": "Cinematic wide shot of a luxurious digital casino environment"
+    },
+    {
+      "category": "game_fortune_tiger",
+      "url": "https://static.prod-images.emergentagent.com/jobs/c342faa1-4c37-492e-9db2-9a223e114e93/images/fde31d192b686ae7d52dc9a3e35dc203f8372a05bbe38b07a2136de8faf95660.png",
+      "description": "Fortune Tiger stylized 3D slot game thumbnail"
+    },
+    {
+      "category": "game_fortune_rabbit",
+      "url": "https://static.prod-images.emergentagent.com/jobs/c342faa1-4c37-492e-9db2-9a223e114e93/images/4b335a5d6ecfdeeef5de0049756bd4776081bb465e7c30a4faedff6c711fb87c.png",
+      "description": "Fortune Rabbit stylized 3D slot game thumbnail"
+    },
+    {
+      "category": "promo_background",
+      "url": "https://images.pexels.com/photos/7594197/pexels-photo-7594197.jpeg",
+      "description": "Casino chips close-up for promotion background panels"
+    }
+  ],
+  "instructions_to_main_agent": {
+    "setup": "Install framer-motion, react-icons, and react-fast-marquee. Configure Tailwind with 'Outfit' and 'Manrope' fonts.",
+    "language": "All UI text MUST be in Portuguese (pt-BR) as requested.",
+    "page_structure": "1) Header (Wallet balance, Auth), 2) Live Winners Marquee (Generates FOMO), 3) Hero Section with main promo, 4) Games Lobby (Bento/Grid for Fortune Tiger, Fortune Rabbit), 5) User Dashboard section (History/Wallet interface).",
+    "pix_integration": "Build a simulated PIX deposit flow using Shadcn Dialog. When user clicks 'Depositar', open modal, select amount, and show a mock QR code screen.",
+    "data_testid": "Add data-testid attributes to all buttons, wallet displays, and modal triggers (e.g., data-testid='pix-deposit-btn')."
+  }
+}
