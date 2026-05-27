@@ -1,11 +1,36 @@
 import { motion } from 'framer-motion';
 
+// Games with AI-generated official PG Soft style artwork (in /public/game-icons/)
+const AI_GENERATED_ICONS = new Set([
+  'fortune-tiger',
+  'fortune-rabbit',
+  'fortune-snake',
+  'fortune-ox',
+  'fortune-mouse',
+  'mina-misteriosa',
+]);
+
 /**
- * Renders a rich, original-looking SVG thumbnail for each game
- * based on game.id. Acts as a fallback when no image is provided.
+ * Renders a rich thumbnail for each game.
+ * - If the game has an AI-generated icon in /game-icons/, use it (best quality).
+ * - Otherwise fallback to a hand-crafted SVG/CSS design per game id.
  */
 const GameThumbnail = ({ game }) => {
   const id = game.id;
+
+  // Use AI-generated PG-style image when available
+  if (AI_GENERATED_ICONS.has(id)) {
+    return (
+      <div className="absolute inset-0 overflow-hidden">
+        <img
+          src={`/game-icons/${id}.png`}
+          alt={game.name}
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+      </div>
+    );
+  }
 
   // Common decorative starburst (used by many slots)
   const Starburst = ({ color = '#fff' }) => (

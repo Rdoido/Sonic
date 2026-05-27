@@ -63,6 +63,15 @@ User asked if they could send their existing site to be presented online. They u
 - Gradient backgrounds matched to game theme
 - Drop-shadow + glow effects on central icons
 
+### Session 3 (Real PG-style Icons - 2026-05-27)
+**AI-generated official PG Soft style artwork** for 6 most popular games using Gemini Nano Banana (gemini-3.1-flash-image-preview):
+- fortune-tiger.png, fortune-rabbit.png, fortune-snake.png
+- fortune-ox.png, fortune-mouse.png, mina-misteriosa.png
+- Saved in /app/frontend/public/game-icons/
+- GameThumbnail.js updated to serve PNGs for these 6 ids; SVG fallback retained for the other 11 games
+- Generation script: /app/scripts/generate_game_icons.py (uses user's reference screenshot for style consistency)
+- Cost: ~$0.24 in EMERGENT_LLM_KEY credits
+
 ## Tested
 - Backend: 100% pass rate (19 pytest cases) — all 17 game IDs work, register/login, wallet, deposit, gameplay, recent winners, promotions
 
