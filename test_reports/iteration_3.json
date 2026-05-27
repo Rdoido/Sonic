@@ -1,0 +1,36 @@
+{
+  "summary": "Backend-only testing for iteration 3 (check-in, admin panel, withdraw v2). Added /app/backend/tests/test_sonicbet_new_features.py with 21 tests covering withdraw rules (min R$20, R$50 bet gate, CNPJ + all 5 valid pix types, invalid type rejection), check-in (auth gate, initial status, day-1 claim credits wallet R$5, double-claim block, streak=1), and admin panel (admin/me gating, 403 for non-admins on overview/users, admin metrics, users/transactions/contacts lists, approve & reject withdraw flow with refund verification). All 21 new tests pass. Full regression suite (40 tests including iteration 2 sonicbet_api) also passes.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_sonicbet_new_features.py",
+    "/app/backend/tests/test_sonicbet_api.py",
+    "/app/test_reports/pytest/pytest_iter3_results.xml",
+    "/app/test_reports/pytest/pytest_iter3_full.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py is 1125 lines — recommend splitting into routers (auth, wallet, games, checkin, admin) for maintainability before it grows further.",
+    "ADMIN_PHONES is loaded at import time (line 952); editing .env requires backend restart. Acceptable for now but worth noting.",
+    "Check-in status endpoint mutates `streak` locally when a day is missed (line 866-868) but does NOT persist the reset to DB. Next /checkin/claim re-derives streak correctly via last_claim_date comparison, so behavior is correct, but the read-side mutation is dead-write — could be removed for clarity.",
+    "Withdraw refund on reject is correctly implemented (verified via test_admin_reject_withdraw_refunds_user). Good.",
+    "Withdraw error message at line 367 may show a negative value if total_bet>50 due to async race (defensive only); not a real issue under current sync flow."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_sonicbet_new_features.py (new)"
+  ],
+  "success_rate": {"backend": "100% (40/40)", "frontend": "not tested (per request)"},
+  "test_credentials": "Admin: phone=11999999999 / password=Test1234 (ADMIN_PHONES env). Non-admin users: random 11-digit phones generated per test.",
+  "seed_data_creation": "Tests register the admin user (11999999999) once if not already present, plus several random throwaway users. No production-style seed required.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Two backend test files exist: test_sonicbet_api.py (baseline 19 tests) and test_sonicbet_new_features.py (iteration-3, 21 tests). Run with `pytest /app/backend/tests/ -v`. Admin test uses phone 11999999999 — falls back to login if already registered, so safe to re-run. All check-in / admin / withdraw behaviors covered. Frontend pages Withdraw.js, CheckInWidget.js, Admin.js not e2e tested per user request — main agent can self-test in browser.",
+  "rca of the issue": "No issues found."
+}

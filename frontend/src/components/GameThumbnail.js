@@ -8,6 +8,17 @@ const AI_GENERATED_ICONS = new Set([
   'fortune-ox',
   'fortune-mouse',
   'mina-misteriosa',
+  'dragon-hatch',
+  'wild-bandito',
+  'mahjong-ways',
+  'gates-olympus',
+  'sweet-bonanza',
+  'sugar-rush',
+  'lucky-neko',
+  'aztec-gold',
+  'aviator',
+  'crazy-time',
+  'plinko',
 ]);
 
 /**

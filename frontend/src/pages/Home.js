@@ -9,6 +9,7 @@ import GameCard from '../components/GameCard';
 import BottomNav from '../components/BottomNav';
 import AuthModal from '../components/AuthModal';
 import HeroCarousel from '../components/HeroCarousel';
+import CheckInWidget from '../components/CheckInWidget';
 import { GAMES_CATALOG } from '../data/games';
 import { FaSearch, FaVolumeUp, FaBars, FaFire, FaTrophy, FaShieldAlt, FaBolt } from 'react-icons/fa';
 
@@ -133,6 +134,9 @@ const Home = () => {
       <div className="relative z-10 max-w-xl mx-auto px-3 pt-4">
         {/* Hero Carousel */}
         <HeroCarousel onSlideClick={handleSlideClick} />
+
+        {/* Daily Check-in (for logged-in users only) */}
+        {user && <CheckInWidget />}
 
         {/* Quick stats / promo strip */}
         <div className="grid grid-cols-3 gap-2 mb-4">

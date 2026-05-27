@@ -347,18 +347,24 @@ async def deposit_pix(data: DepositRequest, request: Request):
 async def withdraw(data: WithdrawRequest, request: Request):
     user = await get_current_user(request)
     
-    if data.amount < 50:
-        raise HTTPException(status_code=400, detail="Saque mínimo: R$ 50,00")
+    if data.amount < 20:
+        raise HTTPException(status_code=400, detail="Saque mínimo: R$ 20,00")
+    
+    valid_types = {"cpf", "cnpj", "email", "phone", "random"}
+    if data.pix_key_type not in valid_types:
+        raise HTTPException(status_code=400, detail="Tipo de chave PIX inválido")
+    if not data.pix_key or not data.pix_key.strip():
+        raise HTTPException(status_code=400, detail="Informe sua chave PIX")
     
     wallet = await get_or_create_wallet(user["user_id"])
     if wallet["balance"] < data.amount:
         raise HTTPException(status_code=400, detail="Saldo insuficiente")
     
-    # Check minimum bet requirement (must have bet at least the deposit amount)
-    if user.get("total_bet", 0) < 100:
+    # Check minimum bet requirement (must have bet at least R$ 50 to prevent bonus abuse)
+    if user.get("total_bet", 0) < 50:
         raise HTTPException(
             status_code=400,
-            detail=f"Você precisa apostar pelo menos R$ 100,00 antes de sacar. Faltam R$ {100 - user.get('total_bet', 0):.2f}"
+            detail=f"Você precisa apostar pelo menos R$ 50,00 antes de sacar. Faltam R$ {50 - user.get('total_bet', 0):.2f}"
         )
     
     transaction_id = f"WTH{uuid.uuid4().hex[:10].upper()}"
@@ -821,6 +827,268 @@ async def list_promotions():
             "color": "#9D4CDD"
         }
     ]
+
+
+# ============= DAILY CHECK-IN =============
+
+CHECKIN_REWARDS = [5.0, 10.0, 15.0, 25.0, 40.0, 75.0, 150.0]  # 7 days, increasing
+CHECKIN_TOTAL = sum(CHECKIN_REWARDS)  # R$ 320
+
+
+def _today_str() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def _yesterday_str() -> str:
+    return (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%Y-%m-%d")
+
+
+@api_router.get("/checkin/status")
+async def checkin_status(request: Request):
+    user = await get_current_user(request)
+    record = await db.checkins.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    today = _today_str()
+
+    if not record:
+        return {
+            "current_day": 0,
+            "claimed_today": False,
+            "next_reward": CHECKIN_REWARDS[0],
+            "rewards": CHECKIN_REWARDS,
+            "total_program": CHECKIN_TOTAL,
+            "streak": 0,
+        }
+
+    claimed_today = record.get("last_claim_date") == today
+    streak = record.get("streak", 0)
+
+    # Reset streak if user missed a day (last claim was not today and not yesterday)
+    if not claimed_today and record.get("last_claim_date") != _yesterday_str():
+        if streak > 0:
+            streak = 0
+
+    # Day index 1..7 (next reward to claim)
+    next_day_idx = streak if claimed_today else min(streak, len(CHECKIN_REWARDS) - 1)
+    next_reward = CHECKIN_REWARDS[min(next_day_idx, len(CHECKIN_REWARDS) - 1)]
+
+    return {
+        "current_day": streak,
+        "claimed_today": claimed_today,
+        "next_reward": next_reward,
+        "rewards": CHECKIN_REWARDS,
+        "total_program": CHECKIN_TOTAL,
+        "streak": streak,
+    }
+
+
+@api_router.post("/checkin/claim")
+async def checkin_claim(request: Request):
+    user = await get_current_user(request)
+    today = _today_str()
+    record = await db.checkins.find_one({"user_id": user["user_id"]})
+
+    if record and record.get("last_claim_date") == today:
+        raise HTTPException(status_code=400, detail="Você já fez check-in hoje. Volte amanhã!")
+
+    # Determine streak day
+    prev_streak = record.get("streak", 0) if record else 0
+    last_date = record.get("last_claim_date") if record else None
+
+    # If last claim was yesterday, continue streak; otherwise reset
+    if last_date == _yesterday_str():
+        new_streak = prev_streak + 1
+    else:
+        new_streak = 1
+
+    # Cap streak at 7 (then cycle back)
+    day_index = ((new_streak - 1) % len(CHECKIN_REWARDS))
+    reward = CHECKIN_REWARDS[day_index]
+
+    # If completed cycle, restart from day 1 next time
+    streak_to_save = new_streak if new_streak < len(CHECKIN_REWARDS) else len(CHECKIN_REWARDS)
+
+    # Credit wallet
+    await db.wallets.update_one(
+        {"user_id": user["user_id"]},
+        {"$inc": {"balance": reward}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+
+    # Save check-in record
+    await db.checkins.update_one(
+        {"user_id": user["user_id"]},
+        {
+            "$set": {
+                "user_id": user["user_id"],
+                "last_claim_date": today,
+                "streak": streak_to_save,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            },
+            "$inc": {"total_claimed": reward, "total_claims": 1},
+        },
+        upsert=True,
+    )
+
+    await db.transactions.insert_one({
+        "transaction_id": f"CHK{uuid.uuid4().hex[:8].upper()}",
+        "user_id": user["user_id"],
+        "type": "checkin",
+        "amount": reward,
+        "day": streak_to_save,
+        "status": "completed",
+        "description": f"Check-in dia {streak_to_save}",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+
+    return {
+        "amount": reward,
+        "day": streak_to_save,
+        "next_day": (streak_to_save % len(CHECKIN_REWARDS)) + 1,
+        "message": f"+R$ {reward:.2f} adicionados ao seu saldo!",
+    }
+
+
+# ============= ADMIN =============
+
+ADMIN_PHONES = os.environ.get("ADMIN_PHONES", "11999999999").split(",")
+
+
+async def require_admin(request: Request) -> dict:
+    user = await get_current_user(request)
+    if user.get("phone") not in ADMIN_PHONES:
+        raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
+    return user
+
+
+@api_router.get("/admin/overview")
+async def admin_overview(request: Request):
+    await require_admin(request)
+    total_users = await db.users.count_documents({})
+    total_games = await db.game_history.count_documents({})
+
+    # Sum totals
+    pipeline_wallets = [{"$group": {"_id": None, "total_balance": {"$sum": "$balance"}}}]
+    wallet_agg = await db.wallets.aggregate(pipeline_wallets).to_list(1)
+    total_balance = wallet_agg[0]["total_balance"] if wallet_agg else 0
+
+    pipeline_tx = [
+        {"$match": {"type": "deposit", "status": "completed"}},
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+    ]
+    deposit_agg = await db.transactions.aggregate(pipeline_tx).to_list(1)
+    total_deposits = deposit_agg[0]["total"] if deposit_agg else 0
+
+    pipeline_w = [
+        {"$match": {"type": "withdraw"}},
+        {"$group": {"_id": "$status", "total": {"$sum": "$amount"}, "count": {"$sum": 1}}}
+    ]
+    w_agg = await db.transactions.aggregate(pipeline_w).to_list(10)
+    withdraws_by_status = {x["_id"]: {"total": x["total"], "count": x["count"]} for x in w_agg}
+
+    pending_withdraws = await db.transactions.count_documents({"type": "withdraw", "status": "pending"})
+
+    new_today = await db.users.count_documents({
+        "created_at": {"$gte": _today_str()}
+    })
+
+    return {
+        "total_users": total_users,
+        "new_users_today": new_today,
+        "total_balance_in_wallets": total_balance,
+        "total_deposits": total_deposits,
+        "withdraws_by_status": withdraws_by_status,
+        "pending_withdraws": pending_withdraws,
+        "total_games_played": total_games,
+    }
+
+
+@api_router.get("/admin/users")
+async def admin_list_users(request: Request, limit: int = 50, skip: int = 0):
+    await require_admin(request)
+    users = await db.users.find(
+        {},
+        {"_id": 0, "password_hash": 0}
+    ).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+
+    # Attach wallet balance
+    for u in users:
+        w = await db.wallets.find_one({"user_id": u["user_id"]}, {"_id": 0, "balance": 1})
+        u["balance"] = w["balance"] if w else 0
+    return users
+
+
+@api_router.get("/admin/transactions")
+async def admin_list_transactions(request: Request, type: Optional[str] = None, status: Optional[str] = None, limit: int = 100):
+    await require_admin(request)
+    query = {}
+    if type:
+        query["type"] = type
+    if status:
+        query["status"] = status
+    txs = await db.transactions.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    return txs
+
+
+@api_router.post("/admin/withdraw/{transaction_id}/approve")
+async def admin_approve_withdraw(transaction_id: str, request: Request):
+    admin = await require_admin(request)
+    tx = await db.transactions.find_one({"transaction_id": transaction_id})
+    if not tx:
+        raise HTTPException(status_code=404, detail="Transação não encontrada")
+    if tx.get("type") != "withdraw" or tx.get("status") != "pending":
+        raise HTTPException(status_code=400, detail="Apenas saques pendentes podem ser aprovados")
+
+    await db.transactions.update_one(
+        {"transaction_id": transaction_id},
+        {"$set": {
+            "status": "completed",
+            "approved_by": admin["user_id"],
+            "approved_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    return {"message": "Saque aprovado", "transaction_id": transaction_id}
+
+
+@api_router.post("/admin/withdraw/{transaction_id}/reject")
+async def admin_reject_withdraw(transaction_id: str, request: Request):
+    admin = await require_admin(request)
+    tx = await db.transactions.find_one({"transaction_id": transaction_id})
+    if not tx:
+        raise HTTPException(status_code=404, detail="Transação não encontrada")
+    if tx.get("type") != "withdraw" or tx.get("status") != "pending":
+        raise HTTPException(status_code=400, detail="Apenas saques pendentes podem ser rejeitados")
+
+    # Refund the user
+    await db.wallets.update_one(
+        {"user_id": tx["user_id"]},
+        {"$inc": {"balance": tx["amount"]}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    await db.transactions.update_one(
+        {"transaction_id": transaction_id},
+        {"$set": {
+            "status": "rejected",
+            "rejected_by": admin["user_id"],
+            "rejected_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    return {"message": "Saque rejeitado e valor estornado", "transaction_id": transaction_id}
+
+
+@api_router.get("/admin/contacts")
+async def admin_list_contacts(request: Request, limit: int = 100):
+    await require_admin(request)
+    contacts = await db.contacts.find({}, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    return contacts
+
+
+@api_router.get("/admin/me")
+async def admin_check(request: Request):
+    """Check if current user is admin (used by frontend to gate UI)."""
+    try:
+        user = await get_current_user(request)
+        is_admin = user.get("phone") in ADMIN_PHONES
+        return {"is_admin": is_admin, "phone": user.get("phone")}
+    except HTTPException:
+        return {"is_admin": False, "phone": None}
 
 
 # ============= HEALTH =============

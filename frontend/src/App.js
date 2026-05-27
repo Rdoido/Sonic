@@ -11,6 +11,7 @@ import GamePage from "./pages/GamePage";
 import History from "./pages/History";
 import Invite from "./pages/Invite";
 import Support from "./pages/Support";
+import Admin from "./pages/Admin";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="/historico" element={<History />} />
             <Route path="/convidar" element={<Invite />} />
             <Route path="/suporte" element={<Support />} />
+            <Route path="/admin" element={<Admin />} />
           </Routes>
           <Toaster
             position="top-center"
