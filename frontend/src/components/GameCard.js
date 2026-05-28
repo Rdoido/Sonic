@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import AuthModal from './AuthModal';
@@ -16,18 +16,41 @@ const PROVIDER_COLORS = {
 
 const GameCard = ({ game, size = 'md', showCountdown = false, index = 0 }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
   const [authOpen, setAuthOpen] = useState(false);
-  const [timeLeft, setTimeLeft] = useState({ minutes: 24, seconds: 13 });
+
+  const [timeLeft, setTimeLeft] = useState({
+    minutes: 24,
+    seconds: 13
+  });
 
   useEffect(() => {
     if (!showCountdown) return;
+
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { minutes: prev.minutes - 1, seconds: 59 };
-        return { minutes: 24, seconds: 13 };
+        if (prev.seconds > 0) {
+          return {
+            ...prev,
+            seconds: prev.seconds - 1
+          };
+        }
+
+        if (prev.minutes > 0) {
+          return {
+            minutes: prev.minutes - 1,
+            seconds: 59
+          };
+        }
+
+        return {
+          minutes: 24,
+          seconds: 13
+        };
       });
     }, 1000);
+
     return () => clearInterval(interval);
   }, [showCountdown]);
 
@@ -37,44 +60,87 @@ const GameCard = ({ game, size = 'md', showCountdown = false, index = 0 }) => {
     lg: 'aspect-[4/5]'
   };
 
-  const handleClick = (e) => {
+  const openGame = (e) => {
+    e.preventDefault();
+
     if (!user) {
-      e.preventDefault();
       setAuthOpen(true);
+      return;
     }
+
+    // FORTUNE RABBIT FULLSCREEN
+    if (
+      game.name?.toLowerCase().includes('fortune rabbit') ||
+      game.id === 'fortune-rabbit'
+    ) {
+      const gameWindow = window.open(
+        `/game/${game.id}`,
+        '_blank'
+      );
+
+      setTimeout(() => {
+        try {
+          if (
+            gameWindow?.document?.documentElement
+              ?.requestFullscreen
+          ) {
+            gameWindow.document.documentElement.requestFullscreen();
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      }, 1500);
+
+      return;
+    }
+
+    navigate(`/game/${game.id}`);
   };
 
-  const providerStyle = PROVIDER_COLORS[game.provider] || 'bg-slate-500 text-white';
+  const providerStyle =
+    PROVIDER_COLORS[game.provider] ||
+    'bg-slate-500 text-white';
 
   return (
     <>
       <Link
-        to={user ? `/game/${game.id}` : '#'}
-        onClick={handleClick}
+        to="#"
+        onClick={openGame}
         className="block"
         data-testid={`game-card-${game.id}`}
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.04, type: 'spring', stiffness: 100 }}
-          whileHover={{ scale: 1.04, y: -3 }}
+          transition={{
+            delay: index * 0.04,
+            type: 'spring',
+            stiffness: 100
+          }}
+          whileHover={{
+            scale: 1.04,
+            y: -3
+          }}
           whileTap={{ scale: 0.97 }}
           className={`game-card-modern ${sizes[size]} relative cursor-pointer`}
         >
-          {/* Original AI-style thumbnail */}
           <GameThumbnail game={game} />
 
-          {/* Provider tag */}
-          <div className={`absolute top-1.5 left-1.5 z-20 ${providerStyle} text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-md`}>
+          <div
+            className={`absolute top-1.5 left-1.5 z-20 ${providerStyle} text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-md`}
+          >
             {game.provider}
           </div>
 
-          {/* Hot badge */}
           {game.hot && (
             <motion.div
-              animate={{ scale: [1, 1.15, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
+              animate={{
+                scale: [1, 1.15, 1]
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity
+              }}
               className="absolute top-1.5 right-1.5 z-20"
             >
               <div className="w-6 h-6 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-[10px] shadow-lg shadow-red-500/50">
@@ -83,37 +149,45 @@ const GameCard = ({ game, size = 'md', showCountdown = false, index = 0 }) => {
             </motion.div>
           )}
 
-          {/* Countdown overlay */}
           {showCountdown && game.countdown && (
             <div className="absolute inset-0 flex items-center justify-center bg-red-600/40 z-10 backdrop-blur-[2px]">
               <div className="bg-gradient-to-br from-red-600 to-red-700 text-white px-3 py-2 rounded-lg text-center shadow-xl">
-                <div className="text-[9px] uppercase tracking-wider font-bold">Mina Misteriosa</div>
+                <div className="text-[9px] uppercase tracking-wider font-bold">
+                  Mina Misteriosa
+                </div>
+
                 <div className="text-lg font-black font-mono">
-                  00:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}
+                  00:
+                  {String(timeLeft.minutes).padStart(2, '0')}:
+                  {String(timeLeft.seconds).padStart(2, '0')}
                 </div>
               </div>
             </div>
           )}
 
-          {/* Bottom gradient for text legibility */}
           <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/80 to-transparent z-10 pointer-events-none" />
 
-          {/* Game name overlay */}
           <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 z-20">
             <div
-              className="text-white font-black text-[11px] sm:text-xs text-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] truncate"
-              style={{ fontFamily: "'Outfit', sans-serif" }}
+              className="text-white font-black text-[11px] sm:text-xs text-center truncate"
+              style={{
+                fontFamily: "'Outfit', sans-serif"
+              }}
             >
               {game.name}
             </div>
           </div>
 
-          {/* Shine sweep on hover */}
           <div className="game-shine pointer-events-none" />
         </motion.div>
       </Link>
 
-      <AuthModal open={authOpen} onOpenChange={setAuthOpen} mode="login" onModeChange={() => {}} />
+      <AuthModal
+        open={authOpen}
+        onOpenChange={setAuthOpen}
+        mode="login"
+        onModeChange={() => {}}
+      />
     </>
   );
 };
